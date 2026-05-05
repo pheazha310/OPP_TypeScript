@@ -5,9 +5,6 @@ const app = express();
 
 app.use(express.json());
 
-// routes
 app.use("/users", userRoutes);
 
-app.listen(3000, () => {
-  console.log("Server running: http://localhost:3000");
-});
+export default app;

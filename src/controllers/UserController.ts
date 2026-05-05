@@ -1,68 +1,73 @@
 import { Request, Response } from "express";
-import User from "../models/User";
+import BaseController from "./baseController";
+import UserService from "../services/User";
 
-class UserController {
-
-  static async createUser(req: Request, res: Response) {
+class UserController extends BaseController {
+  async createUser(req: Request, res: Response) {
     try {
       const { name, email } = req.body;
+      const result = await UserService.createUser({ name, email });
 
-      const result = await User.create(name, email);
-
-      res.status(201).json({
-        message: "User created",
-        data: result,
-      });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      return this.created(res, result, "User created");
+    } catch (error) {
+      return this.fail(res, error);
     }
   }
 
-  static async getUsers(req: Request, res: Response) {
+  async getUsers(req: Request, res: Response) {
     try {
-      const users = await User.findAll();
-      res.json(users);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      const users = await UserService.getUsers();
+      return this.ok(res, users, "Users fetched");
+    } catch (error) {
+      return this.fail(res, error);
     }
   }
 
-  static async getUserById(req: Request, res: Response) {
+  async getUserById(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      const user = await UserService.getUserById(Number(id));
 
-      const user = await User.findById(Number(id));
+      if (!user) {
+        return this.notFound(res, "User not found");
+      }
 
-      res.json(user);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      return this.ok(res, user, "User fetched");
+    } catch (error) {
+      return this.fail(res, error);
     }
   }
 
-  static async updateUser(req: Request, res: Response) {
+  async updateUser(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { name, email } = req.body;
+      const user = await UserService.updateUser(Number(id), { name, email });
 
-      await User.update(Number(id), name, email);
+      if (!user) {
+        return this.notFound(res, "User not found");
+      }
 
-      res.json({ message: "User updated" });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      return this.ok(res, user, "User updated");
+    } catch (error) {
+      return this.fail(res, error);
     }
   }
 
-  static async deleteUser(req: Request, res: Response) {
+  async deleteUser(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      const deleted = await UserService.deleteUser(Number(id));
 
-      await User.delete(Number(id));
+      if (!deleted) {
+        return this.notFound(res, "User not found");
+      }
 
-      res.json({ message: "User deleted" });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      return this.ok(res, null, "User deleted");
+    } catch (error) {
+      return this.fail(res, error);
     }
   }
 }
 
-export default UserController;
+export default new UserController();
